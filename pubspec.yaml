@@ -1,0 +1,41 @@
+name: melody_box
+description: 二次元风格的音乐搜索试听App - MelodyBox
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # 网络请求
+  dio: ^5.4.0
+
+  # 音频播放
+  just_audio: ^0.9.38
+
+  # 状态管理
+  provider: ^6.1.1
+
+  # 本地存储（跨平台）
+  shared_preferences: ^2.2.2
+  path_provider: ^2.1.2
+
+  # Windows窗口管理（桌面端构建时取消注释）
+  # window_manager: ^0.3.8
+
+  # 后台播放 (Android)
+  audio_service: ^0.18.12
+
+  # 图标
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
