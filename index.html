@@ -142,10 +142,33 @@ let track=null,playing=false,audio=new Audio;
 let fav=JSON.parse(localStorage.getItem('mf')||'[]');
 let hotList=[],searchList=[];
 
-// === API ===
+// === API (Direct CORS proxy to gequhai.com) ===
+const PROXY='https://corsproxy.io/?';
+const SITE='https://www.gequhai.com';
+function parseHTML(html){
+  let tracks=[],re=/<tr>\s*<td[^>]*?>(\d+)<\/td>\s*<td>\s*<a\s+href="\/play\/(\d+)"[^>]*?>\s*(.*?)\s*<\/a>/gs,m;
+  while(m=re.exec(html)){let n=m[3].replace(/<[^>]+>/g,'').trim();let r=html.slice(m.index+m[0].length,m.index+m[0].length+500);let a=r.match(/<td[^>]*?style="color:\s*#666[^"]*"[^>]*?>(.*?)<\/td>/);tracks.push({id:parseInt(m[2]),name:n,artist_name:a?a[1].replace(/<[^>]+>/g,'').trim():'',rank:parseInt(m[1]),image_url:'',audio_url:'',album_name:''})}
+  return tracks;
+}
 async function api(p){
-  let r=await fetch(p);
-  return r.json();
+  if(p==='/api/hot'){
+    let all=[];
+    for(let kw of ['周杰伦','抖音','热门']){if(all.length>=30)break;try{let r=await fetch(PROXY+encodeURIComponent(SITE+'/s/'+encodeURIComponent(kw)));let t=await r.text();all.push(...parseHTML(t).slice(0,10))}catch(e){}}
+    return {tracks:all.slice(0,30),total:all.length};
+  }
+  if(p.startsWith('/api/search')){
+    let q=new URLSearchParams(p.split('?')[1]).get('q');
+    let r=await fetch(PROXY+encodeURIComponent(SITE+'/s/'+encodeURIComponent(q)));let t=await r.text();
+    return {tracks:parseHTML(t),total:0};
+  }
+  if(p.startsWith('/api/play/')){
+    let id=p.split('/').pop();
+    let r=await fetch(PROXY+encodeURIComponent(SITE+'/play/'+id));let t=await r.text();
+    let pid=(t.match(/window\.play_id\s*=\s*'([^']*)'/)||[])[1];
+    if(pid){try{let r2=await fetch(SITE+'/api/music',{method:'POST',headers:{'X-Requested-With':'Http','X-Custom-Header':'Key','Content-Type':'application/x-www-form-urlencoded'},body:'id='+pid+'&type=0'});let d=await r2.json();if(d.code===200)return{audio_url:d.data.url||'',song_name:'',cover_url:''}}catch(e){}}
+    return{audio_url:'',song_name:'',cover_url:''};
+  }
+  let r=await fetch(p);return r.json();
 }
 
 // === Toast ===
